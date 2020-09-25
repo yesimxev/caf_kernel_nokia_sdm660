@@ -328,10 +328,8 @@ static void fih_msm_sensor_restart_stream(struct msm_sensor_ctrl_t *s_ctrl)
 	int size=0;
 	uint32_t addrX=0;
 	uint32_t addrY=0;
-	uint16_t outputX=0;
-	uint16_t outputY=0;
-	int a_type=1;
-	int d_type=1;
+	uint16_t outputX=4032;
+	uint16_t outputY=3024;
 
 	mutex_lock(s_ctrl->msm_sensor_mutex);
 	if (s_ctrl->sensor_state == MSM_SENSOR_POWER_UP)
@@ -350,24 +348,23 @@ static void fih_msm_sensor_restart_stream(struct msm_sensor_ctrl_t *s_ctrl)
 			s_ctrl->sensor_i2c_client, addrX, &outputX, MSM_CAMERA_I2C_WORD_DATA);
 		if (rc < 0) {
 			pr_err("%s: %s: read 0x%x failed\n", __func__, sensor_name, addrX);
-			goto END;
+			//goto END;
 		}
 		rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_read(
 			s_ctrl->sensor_i2c_client, addrY, &outputY, MSM_CAMERA_I2C_WORD_DATA);
 		if (rc < 0) {
 			pr_err("%s: %s: read 0x%x failed\n", __func__, sensor_name, addrY);
-			goto END;
+			//goto END;
 		}
 		pr_err("%s: %d x %d\n", __func__, outputX, outputY);
 
-		rc = fih_get_recover_sensor_setting(sensor_name, outputX, outputY, &sensor_setting, &size, &a_type, &d_type);
+		rc = fih_get_recover_sensor_setting(sensor_name, outputX, outputY, &sensor_setting, &size);
 		if(rc < 0){
 			goto END;
 		}
-		pr_err("%s: size %d\n", __func__, size);
-		pr_err("%s: addr_type %d, data_type %d\n", __func__, a_type, d_type);
-		pr_err("%s:%d sensor name:%s recover start\n",__func__,__LINE__,sensor_name);
+		pr_err("%s: setting size %d\n", __func__, size);
 
+		pr_err("%s:%d sensor name:%s recover start\n",__func__,__LINE__,sensor_name);
 		//power down/power up
 		rc = s_ctrl->func_tbl->sensor_power_down(s_ctrl);
 		if (rc < 0) {
@@ -381,18 +378,14 @@ static void fih_msm_sensor_restart_stream(struct msm_sensor_ctrl_t *s_ctrl)
 		}
 
 		//new sensor setting
-		conf_array.addr_type = a_type;
-		conf_array.data_type = d_type;
+		conf_array.addr_type = s_ctrl->stop_setting.addr_type;
+		conf_array.data_type = s_ctrl->stop_setting.data_type;
 		conf_array.delay = s_ctrl->stop_setting.delay;
 		conf_array.size = size;
 		conf_array.reg_setting = sensor_setting;
 
 		//reset sensor setting
-		rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write_table(s_ctrl->sensor_i2c_client, &conf_array);
-		if (rc < 0) {
-			pr_err("%s:%d failed rc %d\n", __func__,__LINE__, rc);
-			goto END;
-		}
+		s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write_table(s_ctrl->sensor_i2c_client, &conf_array);
 		pr_err("%s:%d sensor recover done\n",__func__,__LINE__);
 	}
 END:
