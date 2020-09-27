@@ -14,7 +14,7 @@ VERSION="WALT"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 DEVICE="NOKIA_SDM660"
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
-defconfig=sdm660-perf_defconfig
+defconfig=enigma_defconfig
 
 # Dirs
 BASE_DIR=`pwd`/../
